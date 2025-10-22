@@ -85,6 +85,7 @@ model CodeAnalysis {
 enum Platform {
   WHATSAPP
   SLACK
+  WEB
 }
 
 enum ConversationState {
