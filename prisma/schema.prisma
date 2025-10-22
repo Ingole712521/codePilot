@@ -1,0 +1,97 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  platform      Platform
+  platformId    String
+  email         String?
+  name          String?
+  
+  // GitHub OAuth
+  githubId      String?   @unique
+  githubToken   String?   // Encrypted
+  githubEmail   String?
+  githubName    String?
+  
+  // User-specific data (isolated)
+  sessions      Session[]
+  allowedRepos  AllowedRepo[]
+  conversations Conversation[]
+  codeAnalyses  CodeAnalysis[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([platform, platformId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AllowedRepo {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repoFullName String
+  repoId      String
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, repoFullName])
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  currentRepo String?
+  messages    Json
+  state       ConversationState @default(IDLE)
+  pendingIssues Json?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CodeAnalysis {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  repoUrl     String
+  issues      Json     // Analysis results
+  fixesApplied Json?   // Fixes made
+  prUrl       String?
+  
+  createdAt   DateTime @default(now())
+}
+
+enum Platform {
+  WHATSAPP
+  SLACK
+}
+
+enum ConversationState {
+  IDLE
+  AWAITING_AUTH
+  ANALYZING_REPO
+  AWAITING_FIX_CONFIRMATION
+  FIXING_ISSUES
+  CREATING_PR
+}
