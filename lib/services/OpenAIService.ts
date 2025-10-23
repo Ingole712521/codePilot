@@ -63,4 +63,19 @@ export class OpenAIService {
 		})
 		return response.choices[0]?.message?.content?.trim() || ''
 	}
+
+	async generateResponse(message: string): Promise<string> {
+		const prompt = `You are CodePilot, an AI coding assistant. Help the user with their coding questions and provide helpful responses. Be concise and professional.\n\nUser message: ${message}`
+
+		const response = await this.openai.chat.completions.create({
+			model: 'gpt-4o-mini',
+			messages: [
+				{ role: 'system', content: 'You are CodePilot, a helpful AI coding assistant. Provide clear, concise, and actionable responses.' },
+				{ role: 'user', content: message }
+			],
+			temperature: 0.7,
+			max_tokens: 500,
+		})
+		return response.choices[0]?.message?.content?.trim() || 'I apologize, but I couldn\'t generate a response.'
+	}
 }

@@ -52,7 +52,7 @@ export function RepositoryList() {
 							</div>
 						</div>
 					))
-				}
+				)}
 			</div>
 		</div>
 	)

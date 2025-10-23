@@ -9,11 +9,23 @@ export interface Repository {
 	description: string | null
 }
 
+export interface RepositoryFile {
+	name: string
+	path: string
+	type: 'file' | 'dir'
+	size?: number
+	download_url?: string
+}
+
 export class GitHubService {
 	private readonly octokit: Octokit
 
-	constructor(githubToken: string) {
-		this.octokit = new Octokit({ auth: githubToken })
+	constructor(githubToken?: string) {
+		this.octokit = new Octokit({ 
+			auth: githubToken || process.env.GITHUB_TOKEN,
+			// Use public API for unauthenticated requests
+			baseUrl: 'https://api.github.com'
+		})
 	}
 
 	async getUserRepositories(): Promise<Repository[]> {
@@ -29,6 +41,49 @@ export class GitHubService {
 			html_url: repo.html_url,
 			description: repo.description ?? null,
 		}))
+	}
+
+	async getRepositoryFiles(owner: string, repo: string): Promise<RepositoryFile[]> {
+		try {
+			const { data } = await this.octokit.rest.repos.getContent({
+				owner,
+				repo,
+				path: ''
+			})
+
+			if (Array.isArray(data)) {
+				return data.map((item: any) => ({
+					name: item.name,
+					path: item.path,
+					type: item.type,
+					size: item.size,
+					download_url: item.download_url
+				}))
+			}
+			return []
+		} catch (error) {
+			console.error('Error fetching repository files:', error)
+			return []
+		}
+	}
+
+	async getFileContent(owner: string, repo: string, path: string): Promise<string> {
+		try {
+			const { data } = await this.octokit.rest.repos.getContent({
+				owner,
+				repo,
+				path
+			})
+
+			if ('content' in data && data.content) {
+				// Decode base64 content
+				return Buffer.from(data.content, 'base64').toString('utf-8')
+			}
+			return ''
+		} catch (error) {
+			console.error('Error fetching file content:', error)
+			return ''
+		}
 	}
 
 	async createPullRequest(

@@ -6,11 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ai-agent": "node scripts/start-ai-agent.js",
+    "dev:full": "concurrently \"npm run dev\" \"npm run ai-agent\""
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.17.1",
     "bcryptjs": "^3.0.2",
+    "concurrently": "^8.2.2",
     "crypto": "^1.0.1",
     "jsonwebtoken": "^9.0.2",
     "next": "16.0.0",
@@ -30,6 +34,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

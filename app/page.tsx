@@ -1,65 +1,150 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+
+interface BotStatus {
+  whatsapp: {
+    isReady: boolean
+    platform: string
+  }
+}
 
 export default function Home() {
+  const [botStatus, setBotStatus] = useState<BotStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBotStatus()
+    startAIAgent()
+  }, [])
+
+  const startAIAgent = async () => {
+    try {
+      await fetch('/api/ai-agent/start', { method: 'POST' })
+    } catch (error) {
+      console.error('Failed to start AI agent:', error)
+    }
+  }
+
+  const fetchBotStatus = async () => {
+    try {
+      const response = await fetch('/api/bot/status')
+      const data = await response.json()
+      if (data.success) {
+        setBotStatus(data.status)
+      }
+    } catch (error) {
+      console.error('Error fetching bot status:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            🤖 CodePilot AI
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Your AI coding assistant that analyzes repositories, finds issues, and provides fixes through WhatsApp and Slack.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Bot Status */}
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Bot Status</h2>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading bot status...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                <div className={`w-3 h-3 rounded-full mr-3 ${botStatus?.whatsapp.isReady ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <div>
+                  <h3 className="font-medium text-gray-900">WhatsApp Bot</h3>
+                  <p className="text-sm text-gray-600">
+                    {botStatus?.whatsapp.isReady ? 'Ready - Mention @codepilot to interact' : 'Not connected'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
+
+        {/* Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-3xl mb-4">💬</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Chat Integration</h3>
+            <p className="text-gray-600">
+              Interact with the AI agent through WhatsApp by mentioning @codepilot or @ai
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-3xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Code Analysis</h3>
+            <p className="text-gray-600">
+              Share a GitHub repository link and get instant analysis of code issues
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-3xl mb-4">🛠️</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Auto Fixes</h3>
+            <p className="text-gray-600">
+              Get suggested fixes and see them in a sandbox environment
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/sandbox"
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Open Sandbox
+            </Link>
+            <Link
+              href="/dashboard"
+              className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="mt-16 bg-blue-50 rounded-lg p-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">How to Use</h2>
+          <div className="space-y-4 text-gray-700">
+            <div className="flex items-start">
+              <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 mt-0.5">1</span>
+              <p>Connect your WhatsApp to the bot (QR code will be displayed in console)</p>
+            </div>
+            <div className="flex items-start">
+              <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 mt-0.5">2</span>
+              <p>Send a message mentioning @codepilot or @ai in your WhatsApp</p>
+            </div>
+            <div className="flex items-start">
+              <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 mt-0.5">3</span>
+              <p>Share a GitHub repository link to get code analysis</p>
+            </div>
+            <div className="flex items-start">
+              <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 mt-0.5">4</span>
+              <p>View fixes in the sandbox environment and run your code</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
